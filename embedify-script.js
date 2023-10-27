@@ -1,9 +1,12 @@
 // ==UserScript==
 // @name         Embedify Script
 // @namespace    http://tampermonkey.net/
-// @version      0.1
+// @version      1.0
 // @description  Buttons on youtube to open videos through embedify
 // @author       Mavodeli
+// @source       https://github.com/Mavodeli/embedify-script
+// @updateURL    https://raw.githubusercontent.com/Mavodeli/embedify-script/main/embedify-script.js
+// @downloadURL  https://raw.githubusercontent.com/Mavodeli/embedify-script/main/embedify-script.js
 // @match        https://www.youtube.com/
 // @match        https://www.youtube.com/watch*
 // @match        https://www.youtube.com/shorts*
