@@ -36,7 +36,8 @@
     injectCss(
         ".embedify-button { position: absolute; bottom: 0px; right: 0px; z-index: 1000; opacity: 0.9; font-size: 12px; background: orange; padding: 0.3em; margin: 0.2em; border-radius: 2em; }" +
         ".embedify-shorts-wrapper { position: absolute; bottom: 0px; left: 0px; z-index: 1000; padding: 0.5em; margin: 0.5em; }" +
-        ".embedify-shorts-button { display: block; opacity: 0.9; font-size: 14px; padding: 0.5em; margin: 0.5em; border-radius: 2em; }"
+        ".embedify-shorts-button { display: block; opacity: 0.9; font-size: 14px; padding: 0.5em; margin: 0.5em; border-radius: 2em; }" +
+        ".embedify-watch-main-button { position: absolute; right: 0px; opacity: 0.9; font-size: 14px; padding: 0.5em; border-radius: 2em; background: orange; }"
     );
 })();
 
@@ -95,6 +96,64 @@ function embedifyWatch() {
 
     console.log("embedify watch active");
 
+    // add button for main video
+    createMainButton();
+
+    // add buttons for recommended videos as the user scrolls
+    const resizeObserver = new ResizeObserver(entries => {
+        updateThumbnails()
+    });
+    resizeObserver.observe(document.querySelector("div#columns"));
+
+
+
+    //
+    // functions
+    //
+
+    function getMenuRenderer() {
+        return document.querySelector("div#title[class*=ytd-watch]");
+    }
+
+    function getMainID() {
+        return parseID(window.location.href);
+    }
+
+    function createMainButton() {
+        let id = getMainID();
+        let MenuRenderer = getMenuRenderer();
+        let button = document.createElement("div");
+        button.innerHTML = "<a href='https://mavodeli.de/embedify/?id=" + id + "' style='text-decoration: none;'><button class='embedify-watch-main-button'>embedify</button></a>";
+        // button.setAttribute("style", "display: flex; align-items: center;");
+        MenuRenderer.prepend(button);
+    }
+
+    function getThumbnails() {
+        // ignore already embedified thumbnails
+        return document.querySelectorAll("a#thumbnail[href][class*='ytd-thumbnail']:not([embedified])");
+    }
+
+    function getThumbnailID(thumbnail_element) {
+        return parseID(thumbnail_element.getAttribute("href"));
+    }
+
+    function createButtonForThumbnail(thumbnail) {
+        let id = getThumbnailID(thumbnail);
+        let button = document.createElement("div");
+        button.innerHTML = "<a href='https://mavodeli.de/embedify/?id=" + id + "' target='_blank'><button class='embedify-button'>e</button></a>";
+        thumbnail.parentElement.parentElement.append(button);
+        console.log(button);
+    }
+
+    function updateThumbnails() {
+        var thumbnails = getThumbnails();
+
+        for (let thumbnail of thumbnails) {
+            createButtonForThumbnail(thumbnail);
+            // Set an attribute to prevent getThumbnails from getting this one again
+            thumbnail.setAttribute("embedified", "true");
+        }
+    }
 }
 
 function embedifyShorts() {
