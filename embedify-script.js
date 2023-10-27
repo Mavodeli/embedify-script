@@ -101,7 +101,7 @@ function embedifyHome() {
         let id = getThumbnailID(thumbnail);
         let button = document.createElement("div");
         button.innerHTML = "<a href='https://mavodeli.de/embedify/?id=" + id + "' target='_blank'><button class='embedify-button'>e</button></a>";
-        thumbnail.parentElement.parentElement.parentElement.append(button);
+        thumbnail.parentElement.parentElement.parentElement.parentElement.parentElement.append(button);
     }
 
     function updateThumbnails() {
