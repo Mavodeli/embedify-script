@@ -32,27 +32,11 @@
         1000
     );
 
-
-
-    //
     // CSS
-    //
-
-    function injectCss(css) {
-        var head, style;
-        head = document.getElementsByTagName('head')[0];
-        if (!head) {
-            return;
-        }
-        style = document.createElement('style');
-        style.type = 'text/css';
-        style.innerHTML = css;
-        head.appendChild(style);
-    }
-
     injectCss(
-        ".test { top: 0px; left: 0px; position: absolute; padding: 2px; border: 1px solid black } " +
-        ".embedify-button { position: absolute; bottom: 0px; right: 0px; z-index: 1000; opacity: 0.9; font-size: 12px; background: orange; padding: 0.3em; margin: 0.2em; border-radius: 2em; }"
+        ".embedify-button { position: absolute; bottom: 0px; right: 0px; z-index: 1000; opacity: 0.9; font-size: 12px; background: orange; padding: 0.3em; margin: 0.2em; border-radius: 2em; }" +
+        ".embedify-shorts-wrapper { position: absolute; bottom: 0px; left: 0px; z-index: 1000; padding: 0.5em; margin: 0.5em; }" +
+        ".embedify-shorts-button { display: block; opacity: 0.9; font-size: 14px; padding: 0.5em; margin: 0.5em; border-radius: 2em; }"
     );
 })();
 
@@ -83,14 +67,6 @@ function embedifyHome() {
     function getThumbnails() {
         // ignore already embedified thumbnails
         return document.querySelectorAll("a#thumbnail[href][class*='ytd-thumbnail']:not([embedified])");
-    }
-
-    function parseID(url) {
-        const youtube_regex = /^.*(youtu\.be\/|vi?\/|u\/\w\/|embed\/|shorts\/|\?vi?=|\&vi?=)([^#\&\?]*).*/
-        let parsed = url.match(youtube_regex);
-        if (parsed && parsed[2]) {
-            return parsed[2];
-        }
     }
 
     function getThumbnailID(thumbnail_element) {
@@ -125,4 +101,50 @@ function embedifyShorts() {
 
     console.log("embedify shorts active");
 
+    createButtonsForShort();
+
+
+
+    //
+    // functions
+    //
+
+    function getShortsContainer() {
+        return document.querySelector("div#shorts-container")
+    }
+
+    function getShortID() {
+        return parseID(window.location.href);
+    }
+
+    function createButtonsForShort() {
+        let id = getShortID();
+        let shortsContainer = getShortsContainer();
+        let buttons = document.createElement("div");
+        buttons.innerHTML = "<div class='embedify-shorts-wrapper'>" +
+            "<a href='https://mavodeli.de/embedify/?id=" + id + "' style='text-decoration: none;'><button class='embedify-shorts-button' style='background: orange;'>embedify</button></a>" +
+            "<a href='https://www.youtube.com/watch?v=" + id + "' style='text-decoration: none;'><button class='embedify-shorts-button' style='background: cyan;'>unshortify</button></a>" +
+            "</div>";
+        shortsContainer.append(buttons);
+    }
+}
+
+function parseID(url) {
+    const youtube_regex = /^.*(youtu\.be\/|vi?\/|u\/\w\/|embed\/|shorts\/|\?vi?=|\&vi?=)([^#\&\?]*).*/
+    let parsed = url.match(youtube_regex);
+    if (parsed && parsed[2]) {
+        return parsed[2];
+    }
+}
+
+function injectCss(css) {
+    var head, style;
+    head = document.getElementsByTagName('head')[0];
+    if (!head) {
+        return;
+    }
+    style = document.createElement('style');
+    style.type = 'text/css';
+    style.innerHTML = css;
+    head.appendChild(style);
 }
