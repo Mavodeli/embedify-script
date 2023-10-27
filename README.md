@@ -1,6 +1,6 @@
 # embedify-script
 
-**User script that adds buttons youtube to open the videos in embedify.**
+**User script that adds buttons youtube to open the videos in [embedify](https://mavodeli.de/embedify).**
 
 <br />
 
