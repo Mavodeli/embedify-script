@@ -52,7 +52,7 @@
 
     injectCss(
         ".test { top: 0px; left: 0px; position: absolute; padding: 2px; border: 1px solid black } " +
-        ".embedify-button { position: absolute; bottom: 0px; right: 0px; z-index: 1000; opacity: 0.9; font-size: 12px; background: orange; padding: 0.5em; margin: 0.5em; border-radius: 2em; }"
+        ".embedify-button { position: absolute; bottom: 0px; right: 0px; z-index: 1000; opacity: 0.9; font-size: 12px; background: orange; padding: 0.3em; margin: 0.2em; border-radius: 2em; }"
     );
 })();
 
