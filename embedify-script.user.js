@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Embedify Script
 // @namespace    http://tampermonkey.net/
-// @version      1.2
+// @version      1.3
 // @description  Buttons on youtube to open videos through embedify
 // @author       Mavodeli
 // @source       https://github.com/Mavodeli/embedify-script
@@ -152,7 +152,7 @@ function embedifyWatch(activeButtons) {
         let id = getThumbnailID(thumbnail);
         let button = document.createElement("div");
         button.innerHTML = "<a href='https://mavodeli.de/embedify/?id=" + id + "' target='_blank'><button class='embedify-button'>e</button></a>";
-        thumbnail.parentElement.parentElement.append(button);
+        thumbnail.parentElement.parentElement.parentElement.append(button);
         activeButtons.push(button);
     }
 
