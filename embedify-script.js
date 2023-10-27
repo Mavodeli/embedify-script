@@ -5,6 +5,8 @@
 // @description  Buttons on youtube to open videos through embedify
 // @author       Mavodeli
 // @match        https://www.youtube.com/
+// @match        https://www.youtube.com/watch*
+// @match        https://www.youtube.com/shorts*
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=youtube.com
 // @grant        none
 // @require      https://code.jquery.com/jquery-3.3.1.min.js
@@ -13,7 +15,56 @@
 (function() {
     'use strict';
 
-    console.log("embedify active");
+    // pick the right embedify (and change it when the user opens something)
+    let currentURI;
+
+    setInterval(
+        function() {
+            if (currentURI !== window.location.href) {
+                currentURI = window.location.href;
+                if (currentURI.startsWith('https://www.youtube.com/watch')) {
+                    embedifyWatch();
+                } else if (currentURI.startsWith('https://www.youtube.com/shorts')) {
+                    embedifyShorts();
+                } else if (currentURI.startsWith('https://www.youtube.com')) {
+                    embedifyHome();
+                }}},
+        1000
+    );
+
+
+
+    //
+    // CSS
+    //
+
+    function injectCss(css) {
+        var head, style;
+        head = document.getElementsByTagName('head')[0];
+        if (!head) {
+            return;
+        }
+        style = document.createElement('style');
+        style.type = 'text/css';
+        style.innerHTML = css;
+        head.appendChild(style);
+    }
+
+    injectCss(
+        ".test { top: 0px; left: 0px; position: absolute; padding: 2px; border: 1px solid black } " +
+        ".embedify-button { position: absolute; bottom: 0px; right: 0px; z-index: 1000; opacity: 0.9; font-size: 12px; background: orange; padding: 0.5em; margin: 0.5em; border-radius: 2em; }"
+    );
+})();
+
+
+
+//
+// Different pages:
+//
+
+function embedifyHome() {
+
+    console.log("embedify home active");
 
 
 
@@ -62,28 +113,16 @@
             thumbnail.setAttribute("embedified", "true");
         }
     }
+}
 
+function embedifyWatch() {
 
+    console.log("embedify watch active");
 
-    //
-    // CSS
-    //
+}
 
-    function injectCss(css) {
-        var head, style;
-        head = document.getElementsByTagName('head')[0];
-        if (!head) {
-            return;
-        }
-        style = document.createElement('style');
-        style.type = 'text/css';
-        style.innerHTML = css;
-        head.appendChild(style);
-    }
+function embedifyShorts() {
 
-    injectCss(
-        ".test { top: 0px; left: 0px; position: absolute; padding: 2px; border: 1px solid black } " +
-        ".embedify-button { position: absolute; bottom: 0px; right: 0px; z-index: 1000; opacity: 0.9; font-size: 12px; background: orange; padding: 0.5em; margin: 0.5em; border-radius: 2em; }"
-    );
-})();
+    console.log("embedify shorts active");
 
+}
