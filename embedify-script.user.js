@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Embedify Script
 // @namespace    http://tampermonkey.net/
-// @version      1.1
+// @version      1.2
 // @description  Buttons on youtube to open videos through embedify
 // @author       Mavodeli
 // @source       https://github.com/Mavodeli/embedify-script
@@ -15,23 +15,28 @@
 // @require      https://code.jquery.com/jquery-3.3.1.min.js
 // ==/UserScript==
 
-(function() {
+(function () {
     'use strict';
+
+    // keep track of active buttons
+    var activeButtons = [];
 
     // pick the right embedify (and change it when the user opens something)
     let currentURI;
 
     setInterval(
-        function() {
+        function () {
             if (currentURI !== window.location.href) {
                 currentURI = window.location.href;
                 if (currentURI.startsWith('https://www.youtube.com/watch')) {
-                    embedifyWatch();
+                    embedifyWatch(activeButtons);
                 } else if (currentURI.startsWith('https://www.youtube.com/shorts')) {
-                    embedifyShorts();
+                    embedifyShorts(activeButtons);
                 } else if (currentURI.startsWith('https://www.youtube.com')) {
-                    embedifyHome();
-                }}},
+                    embedifyHome(activeButtons);
+                }
+            }
+        },
         1000
     );
 
@@ -50,11 +55,12 @@
 // Different pages:
 //
 
-function embedifyHome() {
+function embedifyHome(activeButtons) {
 
     console.log("embedify home active");
 
-
+    // initial update (resize isn't called when going back a page)
+    updateThumbnails();
 
     // add buttons as the user scrolls
     const resizeObserver = new ResizeObserver(entries => {
@@ -70,7 +76,7 @@ function embedifyHome() {
 
     function getThumbnails() {
         // ignore already embedified thumbnails
-        return document.querySelectorAll("a#thumbnail[href][class*='ytd-thumbnail']:not([embedified])");
+        return document.querySelectorAll("a#thumbnail[href][class*='ytd-thumbnail']");
     }
 
     function getThumbnailID(thumbnail_element) {
@@ -82,29 +88,30 @@ function embedifyHome() {
         let button = document.createElement("div");
         button.innerHTML = "<a href='https://mavodeli.de/embedify/?id=" + id + "' target='_blank'><button class='embedify-button'>e</button></a>";
         thumbnail.parentElement.parentElement.parentElement.parentElement.parentElement.append(button);
+        activeButtons.push(button);
     }
 
     function updateThumbnails() {
+        clearButtons(activeButtons);
+
         var thumbnails = getThumbnails();
 
         for (let thumbnail of thumbnails) {
             createButtonForThumbnail(thumbnail);
-            // Set an attribute to prevent getThumbnails from getting this one again
-            thumbnail.setAttribute("embedified", "true");
         }
     }
 }
 
-function embedifyWatch() {
+function embedifyWatch(activeButtons) {
 
     console.log("embedify watch active");
 
-    // add button for main video
-    createMainButton();
+    // initial update
+    updateButtons();
 
     // add buttons for recommended videos as the user scrolls
     const resizeObserver = new ResizeObserver(entries => {
-        updateThumbnails()
+        updateButtons();
     });
     resizeObserver.observe(document.querySelector("div#columns"));
 
@@ -129,6 +136,7 @@ function embedifyWatch() {
         button.innerHTML = "<a href='https://mavodeli.de/embedify/?id=" + id + "' style='text-decoration: none;'><button class='embedify-watch-main-button'>embedify</button></a>";
         // button.setAttribute("style", "display: flex; align-items: center;");
         MenuRenderer.prepend(button);
+        activeButtons.push(button);
     }
 
     function getThumbnails() {
@@ -145,23 +153,29 @@ function embedifyWatch() {
         let button = document.createElement("div");
         button.innerHTML = "<a href='https://mavodeli.de/embedify/?id=" + id + "' target='_blank'><button class='embedify-button'>e</button></a>";
         thumbnail.parentElement.parentElement.append(button);
-        console.log(button);
+        activeButtons.push(button);
     }
 
-    function updateThumbnails() {
+    function updateButtons() {
+        clearButtons(activeButtons);
+
+        // main button
+        createMainButton();
+
+        // recommended videos
         var thumbnails = getThumbnails();
 
         for (let thumbnail of thumbnails) {
             createButtonForThumbnail(thumbnail);
-            // Set an attribute to prevent getThumbnails from getting this one again
-            thumbnail.setAttribute("embedified", "true");
         }
     }
 }
 
-function embedifyShorts() {
+function embedifyShorts(activeButtons) {
 
     console.log("embedify shorts active");
+
+    clearButtons(activeButtons);
 
     createButtonsForShort();
 
@@ -188,6 +202,7 @@ function embedifyShorts() {
             "<a href='https://www.youtube.com/watch?v=" + id + "' style='text-decoration: none;'><button class='embedify-shorts-button' style='background: cyan;'>unshortify</button></a>" +
             "</div>";
         shortsContainer.append(buttons);
+        activeButtons.push(buttons);
     }
 }
 
@@ -209,4 +224,11 @@ function injectCss(css) {
     style.type = 'text/css';
     style.innerHTML = css;
     head.appendChild(style);
+}
+
+function clearButtons(activeButtons) {
+    for (let button of activeButtons) {
+        button.remove();
+    }
+    activeButtons = [];
 }
