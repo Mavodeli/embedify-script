@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Embedify Script
 // @namespace    http://tampermonkey.net/
-// @version      1.4
+// @version      1.5
 // @description  Buttons on youtube to open videos through embedify
 // @author       Mavodeli
 // @source       https://github.com/Mavodeli/embedify-script
@@ -13,30 +13,12 @@
 // @require      https://code.jquery.com/jquery-3.3.1.min.js
 // ==/UserScript==
 
+// global variables
+var activeButtons = [];
+var currentURI;
+
 (function () {
     'use strict';
-
-    // keep track of active buttons
-    var activeButtons = [];
-
-    // pick the right embedify (and change it when the user opens something)
-    let currentURI;
-
-    setInterval(
-        function () {
-            if (currentURI !== window.location.href) {
-                currentURI = window.location.href;
-                if (currentURI.startsWith('https://www.youtube.com/watch')) {
-                    embedifyWatch(activeButtons);
-                } else if (currentURI.startsWith('https://www.youtube.com/shorts')) {
-                    embedifyShorts(activeButtons);
-                } else if (currentURI.startsWith('https://www.youtube.com')) {
-                    embedifyHome(activeButtons);
-                }
-            }
-        },
-        1000
-    );
 
     // CSS
     injectCss(
@@ -44,6 +26,23 @@
         ".embedify-shorts-wrapper { position: absolute; bottom: 0px; left: 0px; z-index: 1000; padding: 0.5em; margin: 0.5em; }" +
         ".embedify-shorts-button { display: block; opacity: 0.9; font-size: 14px; padding: 0.5em; margin: 0.5em; border-radius: 2em; }" +
         ".embedify-watch-main-button { position: absolute; right: 0px; opacity: 0.9; font-size: 14px; padding: 0.5em; border-radius: 2em; background: orange; }"
+    );
+
+    // pick the right embedify (and change it when the user opens something)
+    setInterval(
+        function () {
+            if (currentURI !== window.location.href) {
+                currentURI = window.location.href;
+                if (currentURI.startsWith('https://www.youtube.com/watch')) {
+                    embedifyWatch();
+                } else if (currentURI.startsWith('https://www.youtube.com/shorts')) {
+                    embedifyShorts();
+                } else if (currentURI.startsWith('https://www.youtube.com')) {
+                    embedifyHome();
+                }
+            }
+        },
+        1000
     );
 })();
 
@@ -53,7 +52,7 @@
 // Different pages:
 //
 
-function embedifyHome(activeButtons) {
+function embedifyHome() {
 
     console.log("embedify home active");
 
@@ -90,7 +89,7 @@ function embedifyHome(activeButtons) {
     }
 
     function updateThumbnails() {
-        clearButtons(activeButtons);
+        clearButtons();
 
         var thumbnails = getThumbnails();
 
@@ -100,7 +99,7 @@ function embedifyHome(activeButtons) {
     }
 }
 
-function embedifyWatch(activeButtons) {
+function embedifyWatch() {
 
     console.log("embedify watch active");
 
@@ -155,7 +154,7 @@ function embedifyWatch(activeButtons) {
     }
 
     function updateButtons() {
-        clearButtons(activeButtons);
+        clearButtons();
 
         // main button
         createMainButton();
@@ -169,11 +168,11 @@ function embedifyWatch(activeButtons) {
     }
 }
 
-function embedifyShorts(activeButtons) {
+function embedifyShorts() {
 
     console.log("embedify shorts active");
 
-    clearButtons(activeButtons);
+    clearButtons();
 
     createButtonsForShort();
 
@@ -224,7 +223,7 @@ function injectCss(css) {
     head.appendChild(style);
 }
 
-function clearButtons(activeButtons) {
+function clearButtons() {
     for (let button of activeButtons) {
         button.remove();
     }
