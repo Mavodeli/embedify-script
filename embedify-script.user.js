@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Embedify Script
 // @namespace    http://tampermonkey.net/
-// @version      1.6
+// @version      1.7
 // @description  Buttons on youtube to open videos through embedify
 // @author       Mavodeli
 // @source       https://github.com/Mavodeli/embedify-script
@@ -18,7 +18,7 @@
 // global variables
 var activeButtons = [];
 var currentURI;
-var embedifyEnabled = GM_SuperValue.get("embedifyEnabled", false);
+var embedifyEnabled = GM_SuperValue.get("embedifyEnabled", true);
 var embedify_switch;
 var hasReloadButton = false;
 
