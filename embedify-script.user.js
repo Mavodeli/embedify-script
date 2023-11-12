@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Embedify Script
 // @namespace    http://tampermonkey.net/
-// @version      1.5
+// @version      1.6
 // @description  Buttons on youtube to open videos through embedify
 // @author       Mavodeli
 // @source       https://github.com/Mavodeli/embedify-script
@@ -9,13 +9,18 @@
 // @match        https://www.youtube.com/watch*
 // @match        https://www.youtube.com/shorts*
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=youtube.com
-// @grant        none
+// @grant        GM_setValue
+// @grant        GM_getValue
 // @require      https://code.jquery.com/jquery-3.3.1.min.js
+// @require      http://userscripts-mirror.org/scripts/source/107941.user.js 
 // ==/UserScript==
 
 // global variables
 var activeButtons = [];
 var currentURI;
+var embedifyEnabled = GM_SuperValue.get("embedifyEnabled", false);
+var embedify_switch;
+var hasReloadButton = false;
 
 (function () {
     'use strict';
@@ -25,7 +30,15 @@ var currentURI;
         ".embedify-button { position: absolute; bottom: 0px; right: 0px; z-index: 1000; opacity: 0.9; font-size: 12px; background: orange; padding: 0.3em; margin: 0.2em; border-radius: 2em; }" +
         ".embedify-shorts-wrapper { position: absolute; bottom: 0px; left: 0px; z-index: 1000; padding: 0.5em; margin: 0.5em; }" +
         ".embedify-shorts-button { display: block; opacity: 0.9; font-size: 14px; padding: 0.5em; margin: 0.5em; border-radius: 2em; }" +
-        ".embedify-watch-main-button { position: absolute; right: 0px; opacity: 0.9; font-size: 14px; padding: 0.5em; border-radius: 2em; background: orange; }"
+        ".embedify-watch-main-button { position: absolute; right: 0px; opacity: 0.9; font-size: 14px; padding: 0.5em; border-radius: 2em; background: orange; }" +
+        ".embedifySwitch { position: relative; display: inline-block; width: 60px; height: 34px; margin-right: 1em }" +
+        ".embedifySwitch input { opacity: 0; width: 0; height: 0; }" +
+        ".embedify-slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: cyan; -webkit-transition: .4s; transition: .4s; border-radius: 34px; }" +
+        ".embedify-slider:before { position: absolute; content: ''; height: 26px; width: 26px; left: 4px; bottom: 4px; background-color: white; -webkit-transition: .4s; transition: .4s; border-radius: 50%; }" +
+        "input:checked + .embedify-slider { background-color: orange; } input:focus + .embedify-slider { box-shadow: 0 0 1px #2196F3; }" +
+        "input:checked + .embedify-slider:before { -webkit-transform: translateX(26px); -ms-transform: translateX(26px); transform: translateX(26px); }" +
+        // ".embedifyReloadIcon { border-color: transparent white; border-radius: 50%; border-style: solid; border-width: .125em; height: 1.5em; margin: .25em; width: 1.5em; position: relative; &:before, &:after { border-style: solid; content: ''; display: block; position: absolute; width: 0; -webkit-transform: rotate(-45deg); transform: rotate(-45deg); } &:after { border-color: transparent transparent transparent white; border-width: .3125em 0 .3125em .5em; top: -.3125em; left: .0625em; } &:before { border-color: transparent white transparent transparent; border-width: .3125em .5em .3125em 0; bottom: -.3125em; right: .0625em; } } " + 
+        ".embedifyReloadButton { background-color: orange; border-radius: 50%; display: inline-block; text-align: center; height: 34px; width: 34px; font-size: 22px; margin-right: 0.5em; cursor: pointer; }"
     );
 
     // pick the right embedify (and change it when the user opens something)
@@ -54,14 +67,12 @@ var currentURI;
 
 function embedifyHome() {
 
-    console.log("embedify home active");
-
     // initial update (resize isn't called when going back a page)
-    updateThumbnails();
+    updateButtons();
 
     // add buttons as the user scrolls
     const resizeObserver = new ResizeObserver(entries => {
-        updateThumbnails()
+        updateButtons()
     });
     resizeObserver.observe(document.querySelector("ytd-browse"));
 
@@ -88,8 +99,12 @@ function embedifyHome() {
         activeButtons.push(button);
     }
 
-    function updateThumbnails() {
+    function updateButtons() {
         clearButtons();
+
+        createEmbedifySwitch();
+
+        if (!embedifyEnabled) { return; }
 
         var thumbnails = getThumbnails();
 
@@ -100,8 +115,6 @@ function embedifyHome() {
 }
 
 function embedifyWatch() {
-
-    console.log("embedify watch active");
 
     // initial update
     updateButtons();
@@ -156,6 +169,10 @@ function embedifyWatch() {
     function updateButtons() {
         clearButtons();
 
+        createEmbedifySwitch();
+
+        if (!embedifyEnabled) { return; }
+
         // main button
         createMainButton();
 
@@ -170,12 +187,11 @@ function embedifyWatch() {
 
 function embedifyShorts() {
 
-    console.log("embedify shorts active");
-
     clearButtons();
 
     createButtonsForShort();
 
+    createEmbedifySwitch();
 
 
     //
@@ -194,10 +210,15 @@ function embedifyShorts() {
         let id = getShortID();
         let shortsContainer = getShortsContainer();
         let buttons = document.createElement("div");
-        buttons.innerHTML = "<div class='embedify-shorts-wrapper'>" +
-            "<a href='https://mavodeli.de/embedify/?id=" + id + "' style='text-decoration: none;'><button class='embedify-shorts-button' style='background: orange;'>embedify</button></a>" +
-            "<a href='https://www.youtube.com/watch?v=" + id + "' style='text-decoration: none;'><button class='embedify-shorts-button' style='background: cyan;'>unshortify</button></a>" +
-            "</div>";
+        buttons.classList.add("embedify-shorts-wrapper");
+        if (embedifyEnabled) {
+            buttons.innerHTML =
+                "<a href='https://mavodeli.de/embedify/?id=" + id + "' style='text-decoration: none;'><button class='embedify-shorts-button' style='background: orange;'>embedify</button></a>" +
+                "<a href='https://www.youtube.com/watch?v=" + id + "' style='text-decoration: none;'><button class='embedify-shorts-button' style='background: cyan;'>unshortify</button></a>";
+        } else {
+            buttons.innerHTML =
+                "<a href='https://www.youtube.com/watch?v=" + id + "' style='text-decoration: none;'><button class='embedify-shorts-button' style='background: cyan;'>unshortify</button></a>";
+        }
         shortsContainer.append(buttons);
         activeButtons.push(buttons);
     }
@@ -228,4 +249,56 @@ function clearButtons() {
         button.remove();
     }
     activeButtons = [];
+}
+
+function createEmbedifySwitch() {
+    let container = document.querySelector("div#end[class*=ytd-masthead]");
+
+    let toggle = document.createElement("label");
+    toggle.classList.add("embedifySwitch");
+    toggle.innerHTML =
+        "<input type='checkbox'>" +
+        "<span class='embedify-slider'></span>";
+
+    container.prepend(toggle);
+    activeButtons.push(toggle);
+
+    // Set input state
+    embedify_switch = toggle.firstChild;
+    embedify_switch.checked = embedifyEnabled;
+
+    $(embedify_switch).change(function () {
+        if (this.checked) {
+            embedifyEnabled = true;
+            updateGMValue();
+            addReloadButton();
+        } else {
+            embedifyEnabled = false;
+            updateGMValue();
+            addReloadButton();
+        }
+    });
+}
+
+function updateGMValue() {
+    GM_SuperValue.set("embedifyEnabled", embedifyEnabled);
+}
+
+function addReloadButton() {
+    if (hasReloadButton) { return; }
+
+    let container = document.querySelector("div#end[class*=ytd-masthead]");
+
+    let button = document.createElement("input");
+    button.classList.add("embedifyReloadButton");
+    button.type = "button";
+    button.value = "↻";
+
+    container.prepend(button);
+    activeButtons.push(button);
+    hasReloadButton = true;
+
+    $(button).on("click", function () {
+        location.reload();
+    });
 }

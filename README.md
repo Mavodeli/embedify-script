@@ -22,5 +22,8 @@ If your userscript manager supports this feature, clicking this link should prom
 <br />
 (The unshortify button switches to the regular video player)
 
+### Use this switch if you only want the unshortify button:
+![example of switch](example-images/switch.png)
+
 ### Watching videos:
 ![example of regular video player](example-images/watch.png)
