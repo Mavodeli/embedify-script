@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Embedify Script
 // @namespace    http://tampermonkey.net/
-// @version      1.7
+// @version      1.8
 // @description  Buttons on youtube to open videos through embedify
 // @author       Mavodeli
 // @source       https://github.com/Mavodeli/embedify-script
@@ -12,13 +12,12 @@
 // @grant        GM_setValue
 // @grant        GM_getValue
 // @require      https://code.jquery.com/jquery-3.3.1.min.js
-// @require      http://userscripts-mirror.org/scripts/source/107941.user.js 
 // ==/UserScript==
 
 // global variables
 var activeButtons = [];
 var currentURI;
-var embedifyEnabled = GM_SuperValue.get("embedifyEnabled", true);
+var embedifyEnabled = getGMValue();
 var embedify_switch;
 var hasReloadButton = false;
 
@@ -37,7 +36,6 @@ var hasReloadButton = false;
         ".embedify-slider:before { position: absolute; content: ''; height: 26px; width: 26px; left: 4px; bottom: 4px; background-color: white; -webkit-transition: .4s; transition: .4s; border-radius: 50%; }" +
         "input:checked + .embedify-slider { background-color: orange; } input:focus + .embedify-slider { box-shadow: 0 0 1px #2196F3; }" +
         "input:checked + .embedify-slider:before { -webkit-transform: translateX(26px); -ms-transform: translateX(26px); transform: translateX(26px); }" +
-        // ".embedifyReloadIcon { border-color: transparent white; border-radius: 50%; border-style: solid; border-width: .125em; height: 1.5em; margin: .25em; width: 1.5em; position: relative; &:before, &:after { border-style: solid; content: ''; display: block; position: absolute; width: 0; -webkit-transform: rotate(-45deg); transform: rotate(-45deg); } &:after { border-color: transparent transparent transparent white; border-width: .3125em 0 .3125em .5em; top: -.3125em; left: .0625em; } &:before { border-color: transparent white transparent transparent; border-width: .3125em .5em .3125em 0; bottom: -.3125em; right: .0625em; } } " + 
         ".embedifyReloadButton { background-color: orange; border-radius: 50%; display: inline-block; text-align: center; height: 34px; width: 34px; font-size: 22px; margin-right: 0.5em; cursor: pointer; }"
     );
 
@@ -270,18 +268,23 @@ function createEmbedifySwitch() {
     $(embedify_switch).change(function () {
         if (this.checked) {
             embedifyEnabled = true;
-            updateGMValue();
+            setGMValue();
             addReloadButton();
         } else {
             embedifyEnabled = false;
-            updateGMValue();
+            setGMValue();
             addReloadButton();
         }
     });
 }
 
-function updateGMValue() {
-    GM_SuperValue.set("embedifyEnabled", embedifyEnabled);
+function setGMValue() {
+    GM_setValue("embedifyEnabled", embedifyEnabled.toString());
+}
+
+function getGMValue() {
+    let val = GM_getValue("embedifyEnabled", "true");
+    return val === "true";
 }
 
 function addReloadButton() {
